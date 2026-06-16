@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BigQuery Release Notes Dashboard & X/Twitter Share</title>
+    <!-- Google Fonts: Inter & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="dark-theme">
+    <div class="app-container">
+        <!-- Sidebar: Filter & Status & Mock Feed -->
+        <aside class="sidebar">
+            <div class="brand-section">
+                <div class="brand-logo">
+                    <i class="fa-solid fa-database logo-icon"></i>
+                </div>
+                <div class="brand-info">
+                    <h1>BQ Notes</h1>
+                    <span class="brand-subtitle">Google Cloud Feed</span>
+                </div>
+            </div>
+
+            <!-- Feed Status Card -->
+            <div class="status-card glass">
+                <div class="status-header">
+                    <span class="status-dot online"></span>
+                    <span class="status-text">Connected</span>
+                </div>
+                <div class="status-detail">
+                    <div class="detail-row">
+                        <span class="label">Source:</span>
+                        <span class="value">Google API Feed</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Updated:</span>
+                        <span id="last-fetch-time" class="value">Never</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Filter -->
+            <div class="filter-group">
+                <h3>Filter by Category</h3>
+                <div class="filter-pills" id="category-filters">
+                    <button class="pill active" data-type="all">All Updates</button>
+                    <button class="pill" data-type="feature"><span class="badge feature"></span> Feature</button>
+                    <button class="pill" data-type="changed"><span class="badge changed"></span> Changed</button>
+                    <button class="pill" data-type="fixed"><span class="badge fixed"></span> Fixed</button>
+                    <button class="pill" data-type="deprecated"><span class="badge deprecated"></span> Deprecated</button>
+                    <button class="pill" data-type="issue"><span class="badge issue"></span> Issue/Other</button>
+                </div>
+            </div>
+
+            <!-- Simulated Tweets Section -->
+            <div class="simulated-feed-container">
+                <div class="section-title">
+                    <h3>Simulated X Feed</h3>
+                    <span class="tweet-count" id="tweet-count">0 posted</span>
+                </div>
+                <div class="tweet-list" id="simulated-tweets-list">
+                    <div class="no-tweets-placeholder">
+                        <i class="fa-brands fa-x-twitter placeholder-icon"></i>
+                        <p>No simulated tweets yet. Select updates to compose and post a simulated tweet!</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header bar -->
+            <header class="main-header glass">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="search-input" placeholder="Search release notes by keyword...">
+                    <button class="clear-search" id="clear-search-btn" style="display: none;">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="header-actions">
+                    <!-- Refresh Button -->
+                    <button class="btn btn-refresh" id="refresh-btn" title="Refresh Release Notes">
+                        <i class="fa-solid fa-rotate-right" id="refresh-icon"></i>
+                        <span>Refresh</span>
+                    </button>
+                    <!-- Dark/Light Mode toggle -->
+                    <button class="theme-toggle" id="theme-toggle-btn" title="Toggle Theme">
+                        <i class="fa-solid fa-sun icon-light"></i>
+                        <i class="fa-solid fa-moon icon-dark"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Release Notes Stream Container -->
+            <div class="stream-container">
+                <!-- Welcome Banner -->
+                <div class="welcome-banner">
+                    <h2>BigQuery Release Notes</h2>
+                    <p>Stay updated with the latest features, enhancements, and bug fixes in Google Cloud BigQuery. Check the boxes to compile and share updates on social media.</p>
+                </div>
+
+                <!-- Timeline Feed -->
+                <div class="timeline" id="release-notes-timeline">
+                    <!-- Shimmer Loader (shows while fetching) -->
+                    <div class="shimmer-wrapper">
+                        <div class="shimmer-card">
+                            <div class="shimmer-title"></div>
+                            <div class="shimmer-body"></div>
+                        </div>
+                        <div class="shimmer-card">
+                            <div class="shimmer-title"></div>
+                            <div class="shimmer-body"></div>
+                        </div>
+                        <div class="shimmer-card">
+                            <div class="shimmer-title"></div>
+                            <div class="shimmer-body"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Floating Action Bar for Selected Updates -->
+            <div class="floating-action-bar glass" id="floating-bar">
+                <div class="selected-info">
+                    <span class="selection-indicator">
+                        <span class="count-badge" id="selected-count">0</span>
+                        <span>updates selected</span>
+                    </span>
+                </div>
+                <div class="floating-actions">
+                    <button class="btn btn-secondary btn-sm" id="clear-selection-btn">
+                        Clear Selection
+                    </button>
+                    <button class="btn btn-primary" id="tweet-selected-btn">
+                        <i class="fa-brands fa-x-twitter"></i>
+                        <span>Draft Tweet</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Twitter Composer Modal -->
+    <div class="modal-overlay" id="tweet-modal">
+        <div class="modal-card glass">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <i class="fa-brands fa-x-twitter modal-x-icon"></i>
+                    <h2>Compose Post</h2>
+                </div>
+                <button class="modal-close" id="close-modal-btn">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="composer-container">
+                    <div class="composer-profile">
+                        <div class="avatar">
+                            <i class="fa-solid fa-robot"></i>
+                        </div>
+                        <div class="profile-details">
+                            <span class="name">BigQuery Agent <i class="fa-solid fa-circle-check verified-badge"></i></span>
+                            <span class="handle">@BigQueryNotes</span>
+                        </div>
+                    </div>
+                    
+                    <div class="composer-textarea-wrapper">
+                        <textarea id="tweet-textarea" placeholder="What's happening in BigQuery?" maxlength="400"></textarea>
+                    </div>
+
+                    <!-- Character Limit Tracker -->
+                    <div class="composer-footer">
+                        <div class="character-counter">
+                            <svg class="progress-ring" width="30" height="30">
+                                <circle class="progress-ring-bg" stroke="#2f3336" stroke-width="3" fill="transparent" r="12" cx="15" cy="15"/>
+                                <circle class="progress-ring-indicator" id="progress-circle" stroke="#1d9bf0" stroke-width="3" fill="transparent" r="12" cx="15" cy="15"/>
+                            </svg>
+                            <span id="char-count-text">280</span>
+                        </div>
+                        <span class="limit-warning" id="limit-warning-msg">Tweet exceeds standard 280-character limit!</span>
+                    </div>
+                </div>
+
+                <!-- Preview of what is being shared -->
+                <div class="share-preview">
+                    <h4>Included Updates:</h4>
+                    <ul class="preview-updates-list" id="preview-list">
+                        <!-- Filled dynamically -->
+                    </ul>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancel-tweet-btn">Cancel</button>
+                <div class="post-actions">
+                    <button class="btn btn-simulate" id="simulate-post-btn" title="Simulate tweet inside this dashboard">
+                        <i class="fa-solid fa-microchip"></i>
+                        <span>Simulate Post</span>
+                    </button>
+                    <button class="btn btn-twitter-intent" id="real-post-btn" title="Open Twitter Web Intent to post for real">
+                        <i class="fa-brands fa-x-twitter"></i>
+                        <span>Post to X</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Application Script -->
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
